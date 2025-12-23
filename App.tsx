@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GameTheme, Obstacle, Particle } from './types';
 import { generateNewTheme } from './services/geminiService';
@@ -11,9 +12,9 @@ const GROUND_Y = 320;
 const DINO_WIDTH = 70; 
 const DINO_HEIGHT = 85; 
 const OBSTACLE_MIN_GAP = 400;
-const THEME_CHANGE_INTERVAL = 300; // Dikurangi agar tema berubah lebih cepat
+const THEME_CHANGE_INTERVAL = 300; 
 const INVINCIBILITY_DURATION = 6000; 
-const QUIZ_CHANCE_INTERVAL = 500; // Dikurangi agar kuis muncul lebih cepat
+const QUIZ_CHANCE_INTERVAL = 500; 
 
 interface QuizData {
   question: string;
@@ -207,11 +208,12 @@ const App: React.FC = () => {
     setIsExplaining(true);
     
     try {
+      // Menggunakan gemini-flash-latest untuk respon cepat kuis
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Explain why the answer "${currentQuiz.options[index]}" is ${isCorrect ? 'CORRECT' : 'WRONG'} for the question: "${currentQuiz.question}". Respond as Dino Kecepirit (funny T-Rex) in Indonesian. Max 2 sentences.`;
       const response = await ai.models.generateContent({ 
-        model: 'gemini-3-flash-preview', 
-        contents: [{ role: 'user', parts: [{ text: prompt }] }] 
+        model: 'gemini-flash-latest', 
+        contents: prompt
       });
       setQuizExplanation(response.text || "Dino capek jelasin.");
     } catch (e) {
@@ -278,11 +280,11 @@ const App: React.FC = () => {
     setIsChatLoading(true);
 
     try {
-      // Menggunakan gemini-3-pro-preview untuk logika chat yang lebih kompleks
+      // Menggunakan gemini-3-pro-preview untuk logika chat yang lebih berat
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
-        contents: [{ role: 'user', parts: [{ text: userText }] }],
+        contents: userText,
         config: {
           systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Expert. You can change the game colors/environment using the updateEnvironment tool if requested. Always respond in Indonesian.",
           tools: [{ functionDeclarations: [updateEnvironmentTool] }]

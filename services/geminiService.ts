@@ -1,13 +1,14 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { GameTheme } from "../types";
 
 export async function generateNewTheme(score: number): Promise<GameTheme> {
   try {
-    // Inisialisasi setiap kali dipanggil untuk memastikan API key yang diinjeksi terbaca
+    // Inisialisasi instance dengan API_KEY dari environment
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Generate a prehistoric environmental theme for a game called 'T Rex Kecepirit' score ${score}. Reflect a unique weather or season.`,
+      model: "gemini-flash-latest",
+      contents: `Generate a prehistoric environmental theme for a game called 'T Rex Kecepirit' with current score ${score}. The T-Rex is distressed. Create a unique and funny atmosphere (e.g., prehistoric winter, IT department in Jurassic era).`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -26,7 +27,7 @@ export async function generateNewTheme(score: number): Promise<GameTheme> {
     });
 
     if (response && response.text) {
-      // Menghapus markdown jika model tetap memberikannya meskipun sudah responseMimeType json
+      // Menghapus blok kode markdown jika ada
       const cleanedText = response.text.replace(/```json/g, "").replace(/```/g, "").trim();
       return JSON.parse(cleanedText);
     }
