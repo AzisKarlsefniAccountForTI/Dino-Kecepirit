@@ -6,7 +6,7 @@ export async function generateNewTheme(score: number): Promise<GameTheme> {
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-flash-latest",
+      model: "gemini-3-flash-preview",
       contents: `Generate a prehistoric environmental theme for a game called 'T Rex Kecepirit' with current score ${score}. Create a unique and funny atmosphere based on IT or prehistoric seasons.`,
       config: {
         responseMimeType: "application/json",

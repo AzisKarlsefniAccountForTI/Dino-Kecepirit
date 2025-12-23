@@ -211,7 +211,7 @@ const App: React.FC = () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Explain why the answer "${currentQuiz.options[index]}" is ${isCorrect ? 'CORRECT' : 'WRONG'} for the question: "${currentQuiz.question}". Respond as Dino Kecepirit (funny T-Rex) in Indonesian. Max 2 sentences.`;
       const response = await ai.models.generateContent({ 
-        model: 'gemini-flash-latest', 
+        model: 'gemini-3-flash-preview', 
         contents: prompt
       });
       setQuizExplanation(response.text || "Dino capek jelasin.");
@@ -281,13 +281,15 @@ const App: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-flash-latest',
-        contents: [{ parts: [{ text: userText }] }],
+        model: 'gemini-3-pro-preview',
+        contents: userText,
         config: {
-          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Expert. Use the updateEnvironment tool WHENEVER the user asks to change colors, weather, time of day (morning/night), or game atmosphere. Always respond in friendly Indonesian after triggering the tool or if just chatting.",
+          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Expert. Use the updateEnvironment tool WHENEVER the user asks to change colors, weather, time of day (morning/night), or game atmosphere. Always respond in friendly Indonesian.",
           tools: [{ functionDeclarations: [updateEnvironmentTool] }]
         }
       });
+
+      let aiText = response.text || "";
 
       if (response.functionCalls && response.functionCalls.length > 0) {
         const fc = response.functionCalls[0];
@@ -301,17 +303,20 @@ const App: React.FC = () => {
             themeName: args.themeName || prev.themeName,
             cactus: args.cactusColor || prev.cactus
           }));
-          const feedbackText = response.text || `ROAR! Selesai! Aku sudah ubah suasananya jadi "${args.themeName || 'Custom'}". Keren kan?`;
-          setChatMessages(prev => [...prev, { role: 'ai', text: feedbackText }]);
+          if (!aiText) {
+            aiText = `ROAR! Selesai! Aku sudah ubah suasananya jadi "${args.themeName || 'Custom'}". Keren kan?`;
+          }
         }
-      } else if (response.text) {
-        setChatMessages(prev => [...prev, { role: 'ai', text: response.text }]);
-      } else {
-        setChatMessages(prev => [...prev, { role: 'ai', text: "GRRR... Maaf, Dino kurang ngerti perintah itu." }]);
+      } 
+      
+      if (!aiText) {
+        aiText = "GRRR... Dino lagi bingung, coba ketik yang lain!";
       }
+
+      setChatMessages(prev => [...prev, { role: 'ai', text: aiText }]);
     } catch (e) {
       console.error("AI Error:", e);
-      setChatMessages(prev => [...prev, { role: 'ai', text: "Aduh, Dino kebelet, gagal respon. Coba lagi ya!" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', text: "Aduh, Dino kebelet, gagal respon. Periksa koneksi atau API Key kamu ya!" }]);
     } finally {
       setIsChatLoading(false);
     }
