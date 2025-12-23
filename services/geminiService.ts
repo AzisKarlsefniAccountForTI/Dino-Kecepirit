@@ -2,10 +2,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { GameTheme } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export async function generateNewTheme(score: number): Promise<GameTheme> {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `The player reached a score of ${score} in 'T Rex Kecepirit' (a funny dinosaur running game). Generate a prehistoric environmental theme that reflects a specific season (Spring, Summer, Autumn, Winter) or weather condition (Stormy, Sunny, Misty, Aurora). The T-Rex is distressed, so colors should be vibrant.`,
