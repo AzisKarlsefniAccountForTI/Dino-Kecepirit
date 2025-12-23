@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GameTheme, Obstacle, Particle } from './types';
 import { generateNewTheme } from './services/geminiService';
@@ -164,7 +163,6 @@ const App: React.FC = () => {
   };
 
   const startQuiz = useCallback(() => {
-    // Hentikan loop animasi segera untuk mencegah pemicu ganda
     if (frameId.current) cancelAnimationFrame(frameId.current);
     
     let randomIdx: number;
@@ -209,11 +207,13 @@ const App: React.FC = () => {
     setIsExplaining(true);
     
     try {
+      // Correct syntax for literal process.env.API_KEY injection
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Explain why the answer "${currentQuiz.options[index]}" is ${isCorrect ? 'CORRECT' : 'WRONG'} for the question: "${currentQuiz.question}". Respond as Dino Kecepirit (funny T-Rex) in Indonesian. Max 2 sentences.`;
       const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
       setQuizExplanation(response.text || "Dino capek jelasin.");
     } catch (e) {
+      console.error("AI Error:", e);
       setQuizExplanation("Gagal koneksi ke otak purba.");
     } finally {
       setIsExplaining(false);
@@ -276,6 +276,7 @@ const App: React.FC = () => {
     setIsChatLoading(true);
 
     try {
+      // Correct syntax for literal process.env.API_KEY injection
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -304,6 +305,7 @@ const App: React.FC = () => {
         setChatMessages(prev => [...prev, { role: 'ai', text: response.text || "GRRR..." }]);
       }
     } catch (e) {
+      console.error("AI Error:", e);
       setChatMessages(prev => [...prev, { role: 'ai', text: "Aduh, Dino kebelet, gagal respon." }]);
     } finally {
       setIsChatLoading(false);
@@ -457,7 +459,7 @@ const App: React.FC = () => {
     if (currentDisplayScore > lastQuizScore.current + QUIZ_CHANCE_INTERVAL && Math.random() < 0.005) {
       lastQuizScore.current = currentDisplayScore;
       startQuiz();
-      return; // Exit loop early
+      return; 
     }
 
     // Spawn Obstacles
@@ -554,7 +556,7 @@ const App: React.FC = () => {
       </div>
 
       <div className="w-full max-w-5xl px-2 md:px-4 flex-grow flex flex-col mb-10 md:mb-16 relative">
-        <div className="relative glass rounded-[3rem] md:rounded-[5rem] overflow-hidden shadow-[0_60px_120px_-40px_rgba(0,0,0,0.25)] border-[10px] md:border-[20px] border-white ring-1 ring-slate-200/50 flex-grow min-h-[350px] md:min-h-[440px]">
+        <div className="relative glass rounded-[3rem] md:rounded-[5rem] overflow-hidden shadow-[0_60px_120px_-40px_rgba(0,0,0,0.25)] border-[10px] md:border-[20px] border-white ring-1 ring-slate-200/50 flex-grow aspect-video md:aspect-auto min-h-[350px] md:min-h-[440px]">
           <canvas ref={canvasRef} width={800} height={400} className="w-full h-full cursor-pointer block touch-none" onClick={handleJump} />
 
           <div className="absolute top-6 md:top-10 left-6 md:left-10 z-[60] flex flex-col items-start gap-4 pointer-events-none">
@@ -607,8 +609,8 @@ const App: React.FC = () => {
       </div>
 
       {gameState === 'QUIZ' && currentQuiz && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-3xl animate-in fade-in duration-500">
-           <div className="bg-white/95 backdrop-blur-2xl w-full max-w-lg rounded-[2.5rem] shadow-[0_60px_120px_-30px_rgba(0,0,0,0.5)] border border-white/60 flex flex-col items-center p-6 md:p-8 text-center relative animate-in zoom-in-95 duration-500 overflow-y-auto max-h-[95vh]">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-3xl animate-in fade-in duration-500 overflow-y-auto">
+           <div className="bg-white/95 backdrop-blur-2xl w-full max-w-lg rounded-[2.5rem] shadow-[0_60px_120px_-30px_rgba(0,0,0,0.5)] border border-white/60 flex flex-col items-center p-6 md:p-8 text-center relative animate-in zoom-in-95 duration-500 my-auto">
               <div className={`w-12 h-12 md:w-16 md:h-16 rounded-[1.2rem] md:rounded-[1.5rem] flex items-center justify-center text-2xl md:text-4xl mb-4 shadow-xl border-2 border-white transition-all duration-300 ${quizFeedback === 'CORRECT' ? 'bg-emerald-400 rotate-12 scale-110 shadow-emerald-400/50' : quizFeedback === 'WRONG' ? 'bg-red-400 -rotate-12 scale-110 shadow-red-400/50' : 'bg-gradient-to-tr from-amber-400 to-yellow-200 animate-bounce shadow-amber-300/50'}`}>
                 {quizFeedback === 'CORRECT' ? '✅' : quizFeedback === 'WRONG' ? '❌' : '👼'}
               </div>

@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { GameTheme } from "../types";
 
@@ -25,15 +24,18 @@ export async function generateNewTheme(score: number): Promise<GameTheme> {
       },
     });
 
-    return JSON.parse(response.text);
+    if (response && response.text) {
+      return JSON.parse(response.text);
+    }
+    throw new Error("Empty AI response");
   } catch (error) {
     console.error("Error generating theme:", error);
     return {
-      sky: "#e0f2f1",
-      ground: "#4e342e",
-      dino: "#2e7d32",
-      cactus: "#1b5e20",
-      particle: "#795548",
+      sky: "#f8fafc",
+      ground: "#475569",
+      dino: "#166534",
+      cactus: "#064e3b",
+      particle: "#b45309",
       themeName: "Jurassic Default"
     };
   }
