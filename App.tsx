@@ -11,9 +11,9 @@ const GROUND_Y = 320;
 const DINO_WIDTH = 70; 
 const DINO_HEIGHT = 85; 
 const OBSTACLE_MIN_GAP = 400;
-const THEME_CHANGE_INTERVAL = 1000;
+const THEME_CHANGE_INTERVAL = 300; // Dikurangi agar tema berubah lebih cepat
 const INVINCIBILITY_DURATION = 6000; 
-const QUIZ_CHANCE_INTERVAL = 1500; 
+const QUIZ_CHANCE_INTERVAL = 500; // Dikurangi agar kuis muncul lebih cepat
 
 interface QuizData {
   question: string;
@@ -207,12 +207,11 @@ const App: React.FC = () => {
     setIsExplaining(true);
     
     try {
-      // Menggunakan literal process.env.API_KEY secara langsung sesuai instruksi teknis
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Explain why the answer "${currentQuiz.options[index]}" is ${isCorrect ? 'CORRECT' : 'WRONG'} for the question: "${currentQuiz.question}". Respond as Dino Kecepirit (funny T-Rex) in Indonesian. Max 2 sentences.`;
       const response = await ai.models.generateContent({ 
         model: 'gemini-3-flash-preview', 
-        contents: prompt 
+        contents: [{ role: 'user', parts: [{ text: prompt }] }] 
       });
       setQuizExplanation(response.text || "Dino capek jelasin.");
     } catch (e) {
@@ -279,13 +278,13 @@ const App: React.FC = () => {
     setIsChatLoading(true);
 
     try {
-      // Inisialisasi GoogleGenAI dengan literal process.env.API_KEY secara langsung
+      // Menggunakan gemini-3-pro-preview untuk logika chat yang lebih kompleks
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: userText,
+        model: 'gemini-3-pro-preview',
+        contents: [{ role: 'user', parts: [{ text: userText }] }],
         config: {
-          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Expert. You can change the game colors/environment using the updateEnvironment tool if requested (e.g. 'ganti warna jadi biru', 'buat jadi malam', 'ubah kaktus jadi kuning'). Always respond in Indonesian.",
+          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Expert. You can change the game colors/environment using the updateEnvironment tool if requested. Always respond in Indonesian.",
           tools: [{ functionDeclarations: [updateEnvironmentTool] }]
         }
       });
