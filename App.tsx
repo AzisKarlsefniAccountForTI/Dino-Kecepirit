@@ -208,7 +208,6 @@ const App: React.FC = () => {
     setIsExplaining(true);
     
     try {
-      // Menggunakan gemini-flash-latest untuk respon cepat kuis
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Explain why the answer "${currentQuiz.options[index]}" is ${isCorrect ? 'CORRECT' : 'WRONG'} for the question: "${currentQuiz.question}". Respond as Dino Kecepirit (funny T-Rex) in Indonesian. Max 2 sentences.`;
       const response = await ai.models.generateContent({ 
@@ -280,13 +279,12 @@ const App: React.FC = () => {
     setIsChatLoading(true);
 
     try {
-      // Menggunakan gemini-3-pro-preview untuk logika chat yang lebih berat
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: userText,
+        model: 'gemini-flash-latest',
+        contents: [{ parts: [{ text: userText }] }],
         config: {
-          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Expert. You can change the game colors/environment using the updateEnvironment tool if requested. Always respond in Indonesian.",
+          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Expert. Use the updateEnvironment tool WHENEVER the user asks to change colors, weather, time of day (morning/night), or game atmosphere. Always respond in friendly Indonesian after triggering the tool or if just chatting.",
           tools: [{ functionDeclarations: [updateEnvironmentTool] }]
         }
       });
@@ -303,14 +301,17 @@ const App: React.FC = () => {
             themeName: args.themeName || prev.themeName,
             cactus: args.cactusColor || prev.cactus
           }));
-          setChatMessages(prev => [...prev, { role: 'ai', text: `ROAR! Selesai! Aku sudah ubah suasananya jadi "${args.themeName || 'Custom'}". Keren kan?` }]);
+          const feedbackText = response.text || `ROAR! Selesai! Aku sudah ubah suasananya jadi "${args.themeName || 'Custom'}". Keren kan?`;
+          setChatMessages(prev => [...prev, { role: 'ai', text: feedbackText }]);
         }
+      } else if (response.text) {
+        setChatMessages(prev => [...prev, { role: 'ai', text: response.text }]);
       } else {
-        setChatMessages(prev => [...prev, { role: 'ai', text: response.text || "GRRR..." }]);
+        setChatMessages(prev => [...prev, { role: 'ai', text: "GRRR... Maaf, Dino kurang ngerti perintah itu." }]);
       }
     } catch (e) {
       console.error("AI Error:", e);
-      setChatMessages(prev => [...prev, { role: 'ai', text: "Aduh, Dino kebelet, gagal respon." }]);
+      setChatMessages(prev => [...prev, { role: 'ai', text: "Aduh, Dino kebelet, gagal respon. Coba lagi ya!" }]);
     } finally {
       setIsChatLoading(false);
     }
