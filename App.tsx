@@ -207,10 +207,13 @@ const App: React.FC = () => {
     setIsExplaining(true);
     
     try {
-      // Correct syntax for literal process.env.API_KEY injection
+      // Menggunakan literal process.env.API_KEY secara langsung sesuai instruksi teknis
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Explain why the answer "${currentQuiz.options[index]}" is ${isCorrect ? 'CORRECT' : 'WRONG'} for the question: "${currentQuiz.question}". Respond as Dino Kecepirit (funny T-Rex) in Indonesian. Max 2 sentences.`;
-      const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt });
+      const response = await ai.models.generateContent({ 
+        model: 'gemini-3-flash-preview', 
+        contents: prompt 
+      });
       setQuizExplanation(response.text || "Dino capek jelasin.");
     } catch (e) {
       console.error("AI Error:", e);
@@ -276,7 +279,7 @@ const App: React.FC = () => {
     setIsChatLoading(true);
 
     try {
-      // Correct syntax for literal process.env.API_KEY injection
+      // Inisialisasi GoogleGenAI dengan literal process.env.API_KEY secara langsung
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
