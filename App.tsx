@@ -468,22 +468,17 @@ const App: React.FC = () => {
     const dx = 50;
     const dy = dinoY.current;
 
-    // Pulsating Invincibility Glow
     if (isInvincible) {
       const pulse = Math.sin(Date.now() / 150);
       const blurSize = 25 + pulse * 10;
       ctx.save();
       ctx.shadowBlur = blurSize;
       ctx.shadowColor = `rgba(251, 191, 36, ${0.6 + pulse * 0.3})`;
-      
-      // Draw Halo above head
       ctx.strokeStyle = '#fbbf24'; 
       ctx.lineWidth = 4; 
       ctx.beginPath();
       ctx.ellipse(dx + 35, dy - 20 + pulse * 5, 25, 6, 0, 0, Math.PI * 2); 
       ctx.stroke();
-      
-      // Draw Dino with Glow
       drawDinoBlocks(ctx, dx, dy, theme.dino, isJumping.current, scoreRef.current);
       ctx.restore();
     } else {
@@ -501,8 +496,6 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center min-h-screen py-16 px-4 relative overflow-x-hidden">
-      
-      {/* TITLE & SUBTITLE */}
       <div className="text-center mb-16 animate-in slide-in-from-top duration-1000 w-full px-4 flex flex-col items-center">
         <div className="glass px-20 py-14 rounded-[5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] border border-white/50 relative overflow-hidden group mb-10">
           <div className="absolute inset-0 bg-emerald-100/10 group-hover:bg-emerald-200/20 transition-all duration-700"></div>
@@ -518,12 +511,10 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* GAME PANEL */}
       <div className="w-full max-w-5xl px-4 flex-grow flex flex-col mb-16 relative">
         <div className="relative glass rounded-[5rem] overflow-hidden shadow-[0_60px_120px_-40px_rgba(0,0,0,0.25)] border-[20px] border-white ring-1 ring-slate-200/50 flex-grow min-h-[440px]">
           <canvas ref={canvasRef} width={800} height={400} className="w-full h-full cursor-pointer block" onClick={handleJump} />
 
-          {/* INTERNAL HUD */}
           <div className="absolute top-10 left-10 z-[60] flex flex-col items-start gap-4 pointer-events-none">
              {isInvincible && (
                <div className="flex flex-col items-start gap-2 animate-in slide-in-from-left duration-500">
@@ -534,16 +525,13 @@ const App: React.FC = () => {
                       <div 
                         className="h-full bg-gradient-to-r from-amber-200 via-amber-400 to-amber-100 transition-all duration-300 shadow-[0_0_20px_rgba(251,191,36,0.8)] relative"
                         style={{ width: `${(invincibilityTimeLeft / INVINCIBILITY_DURATION) * 100}%` }}
-                      >
-                        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.4)_50%,transparent_75%)] bg-[length:20px_20px] animate-[shimmer_1.5s_linear_infinite]"></div>
-                      </div>
+                      />
                    </div>
                  </div>
                </div>
              )}
           </div>
 
-          {/* HUD: HIDDEN ON START/GAMEOVER */}
           {gameState === 'PLAYING' && (
             <div className="absolute top-10 right-10 flex gap-5 pointer-events-none z-[60] animate-in fade-in duration-500">
               <div className="glass px-7 py-4 rounded-[2.5rem] shadow-2xl border border-white/70 flex flex-col items-end">
@@ -576,7 +564,6 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* QUIZ MODAL - COMPACT VERSION */}
       {gameState === 'QUIZ' && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-3xl animate-in fade-in duration-500">
            <div className="bg-white/95 backdrop-blur-2xl w-full max-w-lg rounded-[2.5rem] shadow-[0_60px_120px_-30px_rgba(0,0,0,0.5)] border border-white/60 flex flex-col items-center p-6 md:p-8 text-center relative animate-in zoom-in-95 duration-500 overflow-y-auto max-h-[95vh]">
@@ -631,7 +618,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* CONTROLS GRID */}
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 px-4">
         <div className="glass p-10 rounded-[3.5rem] shadow-xl border border-white/50 text-center flex flex-col items-center hover:translate-y-[-5px] transition-transform">
           <div className="w-16 h-16 bg-emerald-50 text-emerald-700 rounded-[1.5rem] flex items-center justify-center mb-6 font-black shadow-inner border border-emerald-100">SPACE</div>
@@ -650,7 +636,6 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* CHAT ASSISTANT */}
       <div className="w-full max-w-5xl glass rounded-[5rem] shadow-[0_80px_150px_-50px_rgba(0,0,0,0.2)] border-[14px] border-white overflow-hidden flex flex-col md:flex-row h-[600px] mb-20 relative">
         <div className="md:w-1/3 bg-slate-900 p-14 text-white flex flex-col justify-between relative overflow-hidden">
           <div className="absolute -top-10 -right-10 w-72 h-72 bg-emerald-500/20 rounded-full blur-[110px]"></div>
@@ -686,7 +671,6 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* FOOTER */}
       <footer className="mb-20 text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.5em] flex items-center gap-12 w-full max-w-5xl px-8 text-center flex-col md:flex-row">
         <div className="hidden md:block h-px flex-1 bg-slate-200/60" />
         <div className="flex flex-col gap-2">

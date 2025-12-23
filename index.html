@@ -47,7 +47,6 @@
       border-radius: 10px;
     }
 
-    /* Glow Animations for Title */
     @keyframes emerald-glow {
       0%, 100% {
         text-shadow: 0 0 10px rgba(16, 185, 129, 0.2), 0 0 20px rgba(16, 185, 129, 0.1);
@@ -87,5 +86,7 @@
 </head>
 <body class="bg-gradient-modern min-h-screen">
   <div id="root"></div>
+  <!-- Menghubungkan index.tsx agar aplikasi berjalan di Vercel -->
+  <script type="module" src="./index.tsx"></script>
 </body>
 </html>
