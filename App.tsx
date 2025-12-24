@@ -121,6 +121,7 @@ const App: React.FC = () => {
     { role: 'ai', text: 'ROAR! Dino Kecepirit di sini. Kamu bisa minta aku ganti warna badan, cuaca, atau waktu (pagi/malam) lewat chat ini lho!' }
   ]);
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [apiQuotaExceeded, setApiQuotaExceeded] = useState(false);
   const isTyping = useRef(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -133,6 +134,35 @@ const App: React.FC = () => {
   const frameId = useRef<number>(0);
   const scoreRef = useRef(0);
   const nextThemeScore = useRef(THEME_CHANGE_INTERVAL);
+
+  const withRetry = useCallback(async <T,>(fn: () => Promise<T>, maxRetries = 3): Promise<T> => {
+    let lastError: any;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        lastError = err;
+        const isQuotaError = err.message?.includes('429') || err.status === 429 || err.message?.includes('RESOURCE_EXHAUSTED');
+        if (isQuotaError) {
+          setApiQuotaExceeded(true);
+          if (i < maxRetries - 1) {
+            const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+        }
+        throw err;
+      }
+    }
+    throw lastError;
+  }, []);
+
+  const handleOpenSelectKey = async () => {
+    if (window.aistudio?.openSelectKey) {
+      await window.aistudio.openSelectKey();
+      setApiQuotaExceeded(false);
+    }
+  };
 
   useEffect(() => {
     if (invincibilityTimeLeft > 0 && gameState === 'PLAYING') {
@@ -208,19 +238,22 @@ const App: React.FC = () => {
     setIsExplaining(true);
     
     try {
-      const key = process.env.API_KEY || "";
-      if (!key) throw new Error("API Key Missing");
-
-      const ai = new GoogleGenAI({ apiKey: key });
-      const prompt = `Explain why the answer "${currentQuiz.options[index]}" is ${isCorrect ? 'CORRECT' : 'WRONG'} for the question: "${currentQuiz.question}". Respond as Dino Kecepirit (funny T-Rex) in Indonesian. Max 2 sentences.`;
-      const response = await ai.models.generateContent({ 
-        model: 'gemini-3-flash-preview', 
-        contents: prompt
+      await withRetry(async () => {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const prompt = `Explain why the answer "${currentQuiz.options[index]}" is ${isCorrect ? 'CORRECT' : 'WRONG'} for the question: "${currentQuiz.question}". Respond as Dino Kecepirit (funny T-Rex) in Indonesian. Max 2 sentences.`;
+        const response = await ai.models.generateContent({ 
+          model: 'gemini-3-flash-preview', 
+          contents: [{ parts: [{ text: prompt }] }]
+        });
+        setQuizExplanation(response.text || "Dino capek jelasin.");
       });
-      setQuizExplanation(response.text || "Dino capek jelasin.");
-    } catch (e) {
+    } catch (e: any) {
       console.error("AI Error:", e);
-      setQuizExplanation("Periksa koneksi atau API Key kamu ya! Dino lagi pusing.");
+      if (e.message?.includes('429')) {
+        setQuizExplanation("Quota Dino habis! Gunakan API Key pribadimu untuk lanjut.");
+      } else {
+        setQuizExplanation("Periksa koneksi atau API Key kamu ya! Dino gak denger.");
+      }
     } finally {
       setIsExplaining(false);
     }
@@ -282,49 +315,52 @@ const App: React.FC = () => {
     setIsChatLoading(true);
 
     try {
-      const key = process.env.API_KEY || "";
-      if (!key) throw new Error("API Key Missing");
+      await withRetry(async () => {
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: [{ parts: [{ text: userText }] }],
+          config: {
+            systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Specialist. Your primary goal is to help users change the game colors, weather, or atmosphere. If they ask for any visual change (seperti warna kaktus, warna dino, cuaca, waktu siang/malam), ALWAYS trigger the 'updateEnvironment' tool. Always respond in friendly Indonesian.",
+            tools: [{ functionDeclarations: [updateEnvironmentTool] }]
+          }
+        });
 
-      const ai = new GoogleGenAI({ apiKey: key });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview', // Menggunakan Pro untuk tool calling yang lebih akurat
-        contents: userText, // Mengirim teks langsung sebagai string
-        config: {
-          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Specialist. Your primary goal is to help users change the game colors, weather, or atmosphere. If they ask for any visual change (seperti warna kaktus, warna dino, cuaca, waktu siang/malam), ALWAYS trigger the 'updateEnvironment' tool. Always respond in friendly Indonesian.",
-          tools: [{ functionDeclarations: [updateEnvironmentTool] }]
-        }
-      });
+        let aiText = response.text || "";
 
-      let aiText = response.text || "";
-
-      if (response.functionCalls && response.functionCalls.length > 0) {
-        for (const fc of response.functionCalls) {
-          if (fc.name === 'updateEnvironment') {
-            const args = fc.args as any;
-            setTheme(prev => ({
-              ...prev,
-              sky: args.skyColor || prev.sky,
-              dino: args.dinoColor || prev.dino,
-              ground: args.groundColor || prev.ground,
-              themeName: args.themeName || prev.themeName,
-              cactus: args.cactusColor || prev.cactus
-            }));
-            
-            if (!aiText) {
-              aiText = `ROAR! Selesai! Aku sudah ubah suasananya jadi "${args.themeName || 'Custom'}". Keren kan?`;
+        if (response.functionCalls && response.functionCalls.length > 0) {
+          for (const fc of response.functionCalls) {
+            if (fc.name === 'updateEnvironment') {
+              const args = fc.args as any;
+              setTheme(prev => ({
+                ...prev,
+                sky: args.skyColor || prev.sky,
+                dino: args.dinoColor || prev.dino,
+                ground: args.groundColor || prev.ground,
+                themeName: args.themeName || prev.themeName,
+                cactus: args.cactusColor || prev.cactus
+              }));
+              
+              if (!aiText) {
+                aiText = `ROAR! Selesai! Aku sudah ubah suasananya jadi "${args.themeName || 'Custom'}". Keren kan?`;
+              }
             }
           }
+        } 
+        
+        if (!aiText) {
+          aiText = "GRRR... Dino lagi gak konsen, coba ketik yang lain ya!";
         }
-      } 
-      
-      if (!aiText) {
-        aiText = "GRRR... Dino lagi gak konsen, coba ketik yang lain ya!";
-      }
 
-      setChatMessages(prev => [...prev, { role: 'ai', text: aiText }]);
-    } catch (e) {
+        setChatMessages(prev => [...prev, { role: 'ai', text: aiText }]);
+      });
+    } catch (e: any) {
       console.error("AI Error:", e);
-      setChatMessages(prev => [...prev, { role: 'ai', text: "Periksa koneksi atau API Key kamu ya! Dino gak denger." }]);
+      let errorMsg = "Periksa koneksi atau API Key kamu ya! Dino gak denger.";
+      if (e.message?.includes('429')) {
+        errorMsg = "Waduh, quota barengan Dino sudah habis. Klik tombol 'Ganti Kunci API' di bawah untuk pakai API Key pribadimu!";
+      }
+      setChatMessages(prev => [...prev, { role: 'ai', text: errorMsg }]);
     } finally {
       setIsChatLoading(false);
     }
@@ -519,7 +555,7 @@ const App: React.FC = () => {
     obstacles.current.forEach(obs => { drawCactus(ctx, obs.x, GROUND_Y - obs.height, obs.width, obs.height, theme.cactus); });
 
     frameId.current = requestAnimationFrame(gameLoop);
-  }, [gameState, theme, highScore, isLoadingTheme, isInvincible, startQuiz]);
+  }, [gameState, theme, highScore, isLoadingTheme, isInvincible, startQuiz, withRetry]);
 
   useEffect(() => {
     if (gameState === 'PLAYING') {
@@ -643,6 +679,9 @@ const App: React.FC = () => {
                         <p className="text-[10px] md:text-sm font-bold text-slate-700 leading-relaxed italic">"{quizExplanation}"</p>
                       )}
                     </div>
+                    {apiQuotaExceeded && (
+                      <button onClick={handleOpenSelectKey} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-black py-4 rounded-[1rem] md:rounded-[1.5rem] text-sm shadow-xl transition-all active:scale-95 uppercase font-pixel tracking-tighter">Ganti Kunci API</button>
+                    )}
                     <button onClick={closeQuiz} className="w-full bg-slate-900 hover:bg-black text-white font-black py-4 md:py-5 rounded-[1rem] md:rounded-[1.5rem] text-sm md:text-lg shadow-xl transition-all active:scale-95 tracking-widest font-pixel">CONTINUE</button>
                   </div>
                 )}
@@ -660,6 +699,9 @@ const App: React.FC = () => {
             <p className="text-slate-400 text-[10px] md:text-sm font-bold leading-relaxed opacity-80 italic">
               "Mau warna badan baru atau suasana malam hari? Bilang aja, nanti aku sulap!"
             </p>
+            {apiQuotaExceeded && (
+              <button onClick={handleOpenSelectKey} className="mt-8 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/50 px-4 py-2 rounded-xl text-[8px] font-pixel tracking-widest uppercase transition-all">Ganti Kunci API (Quota Penuh)</button>
+            )}
           </div>
           <div className="relative z-10 glass-dark px-6 md:px-8 py-3 md:py-4 rounded-[1.5rem] md:rounded-[2rem] text-[7px] md:text-[9px] font-black tracking-widest text-emerald-300 uppercase shadow-xl mt-6 md:mt-0">REAL-TIME ENV CONTROL</div>
         </div>
