@@ -208,8 +208,7 @@ const App: React.FC = () => {
     setIsExplaining(true);
     
     try {
-      const apiKey = process.env.API_KEY || "";
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Explain why the answer "${currentQuiz.options[index]}" is ${isCorrect ? 'CORRECT' : 'WRONG'} for the question: "${currentQuiz.question}". Respond as Dino Kecepirit (funny T-Rex) in Indonesian. Max 2 sentences.`;
       const response = await ai.models.generateContent({ 
         model: 'gemini-3-flash-preview', 
@@ -280,21 +279,24 @@ const App: React.FC = () => {
     setIsChatLoading(true);
 
     try {
-      const apiKey = process.env.API_KEY || "";
-      if (!apiKey) throw new Error("API Key missing");
+      // Pastikan API Key ada
+      if (!process.env.API_KEY) {
+        throw new Error("API_KEY is not defined");
+      }
 
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: { parts: [{ text: userText }] },
+        model: 'gemini-3-pro-preview',
+        contents: userText, // Gunakan string langsung, bukan array of parts yang salah format
         config: {
-          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Specialist. Help users change game colors, weather, or atmosphere. If they ask for visual changes (cactus color, dino color, sky, day/night), ALWAYS call 'updateEnvironment'. Respond in friendly Indonesian.",
+          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Specialist. Your primary goal is to help users change the game colors, weather, or atmosphere. If they ask for any visual change (seperti warna kaktus, warna dino, cuaca, waktu siang/malam), ALWAYS trigger the 'updateEnvironment' tool. Always respond in friendly Indonesian after triggering the tool or if just chatting.",
           tools: [{ functionDeclarations: [updateEnvironmentTool] }]
         }
       });
 
       let aiText = response.text || "";
 
+      // Handle Tool Calls
       if (response.functionCalls && response.functionCalls.length > 0) {
         for (const fc of response.functionCalls) {
           if (fc.name === 'updateEnvironment') {
@@ -322,7 +324,7 @@ const App: React.FC = () => {
       setChatMessages(prev => [...prev, { role: 'ai', text: aiText }]);
     } catch (e) {
       console.error("AI Error:", e);
-      setChatMessages(prev => [...prev, { role: 'ai', text: "Waduh, koneksi Dino lagi putus atau API_KEY Vercel belum beres. Coba cek lagi ya!" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', text: "Waduh, koneksi Dino lagi putus atau kunci pintu (API_KEY) belum dipasang di Vercel. Coba cek lagi ya!" }]);
     } finally {
       setIsChatLoading(false);
     }
@@ -336,24 +338,30 @@ const App: React.FC = () => {
 
     const legAnim = !isJumping && Math.floor(score / 5) % 2 === 0;
 
+    // --- FAR LEG (BACK LEG) ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 20, y + 70, 12, legAnim ? 15 : 10);
     ctx.fillRect(x + 23, y + (legAnim ? 80 : 75), 10, 5);
     ctx.fillStyle = shadowColor;
     ctx.fillRect(x + 20, y + 70, 12, legAnim ? 15 : 10);
 
+    // --- MAIN BODY ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 10, y + 35, 35, 35); 
+    
     ctx.fillStyle = shadowColor;
     ctx.fillRect(x + 10, y + 62, 35, 8);
     ctx.fillRect(x + 40, y + 35, 5, 35);
+
     ctx.fillStyle = bellyColor;
     ctx.fillRect(x + 20, y + 45, 12, 18);
+
     ctx.fillStyle = patternsColor;
     ctx.fillRect(x + 15, y + 38, 4, 4);
     ctx.fillRect(x + 30, y + 50, 4, 4);
     ctx.fillRect(x + 12, y + 55, 4, 4);
 
+    // --- TAIL ---
     ctx.fillStyle = color;
     ctx.fillRect(x - 5, y + 45, 15, 15);
     ctx.fillRect(x - 12, y + 50, 8, 8);
@@ -361,26 +369,34 @@ const App: React.FC = () => {
     ctx.fillRect(x - 5, y + 55, 15, 5);
     ctx.fillRect(x - 12, y + 54, 8, 4);
 
+    // --- NECK ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 35, y + 35, 12, 15);
     ctx.fillStyle = shadowColor;
     ctx.fillRect(x + 44, y + 35, 3, 15);
 
+    // --- HEAD ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 15, y + 5, 54, 35); 
+    
     ctx.fillStyle = highlightColor;
     ctx.fillRect(x + 15, y + 5, 54, 6);
+    
     ctx.fillStyle = shadowColor;
     ctx.fillRect(x + 15, y + 30, 54, 5);
     ctx.fillRect(x + 64, y + 5, 5, 35);
+
     ctx.fillStyle = "rgba(0,0,0,0.4)";
     ctx.fillRect(x + 45, y + 24, 24, 2);
+
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(x + 48, y + 26, 4, 5);
     ctx.fillRect(x + 56, y + 26, 4, 5);
     ctx.fillRect(x + 64, y + 26, 4, 5);
+
     ctx.fillStyle = "rgba(0,0,0,0.3)";
     ctx.fillRect(x + 62, y + 10, 3, 3);
+
     ctx.fillStyle = "#fbbf24";
     ctx.fillRect(x + 45, y + 8, 10, 10);
     ctx.fillStyle = "#000000";
@@ -388,12 +404,14 @@ const App: React.FC = () => {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(x + 50, y + 11, 1, 1);
 
+    // --- ARMS ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 42, y + 45, 14, 7);
     ctx.fillRect(x + 54, y + 49, 4, 4);
     ctx.fillStyle = shadowColor;
     ctx.fillRect(x + 42, y + 50, 14, 2);
 
+    // --- NEAR LEG (FRONT LEG) ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 35, y + 70, 12, legAnim ? 10 : 15);
     ctx.fillRect(x + 38, y + (legAnim ? 75 : 80), 10, 5);
@@ -414,6 +432,10 @@ const App: React.FC = () => {
       ctx.fillRect(x + width * 0.75, y + height * 0.5, width / 4, 8);
       ctx.fillRect(x + width - 8, y + height * 0.5 - armH, 8, armH + 8);
     }
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.fillRect(x + width / 2, y + 10, 3, 3);
+    ctx.fillRect(x + width / 2 - 4, y + 30, 3, 3);
+    ctx.fillRect(x + width / 2 + 5, y + 50, 3, 3);
   };
 
   const gameLoop = useCallback(() => {
@@ -423,6 +445,7 @@ const App: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Background & Ground line
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = theme.sky;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -430,6 +453,7 @@ const App: React.FC = () => {
     ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(canvas.width, GROUND_Y); ctx.stroke();
 
+    // Physics
     dinoVy.current += GRAVITY;
     dinoY.current += dinoVy.current;
     if (dinoY.current > GROUND_Y - DINO_HEIGHT) {
@@ -438,78 +462,86 @@ const App: React.FC = () => {
       isJumping.current = false;
     }
 
+    // Score & Speed
     scoreRef.current += 1;
     const currentDisplayScore = Math.floor(scoreRef.current / 10);
     setScore(currentDisplayScore);
     gameSpeed.current += SPEED_INCREMENT;
 
+    // AI Theme Change
     if (currentDisplayScore >= nextThemeScore.current && !isLoadingTheme) {
       updateTheme(currentDisplayScore);
     }
 
-    if (currentDisplayScore > 0 && currentDisplayScore > lastQuizScore.current + QUIZ_CHANCE_INTERVAL && Math.random() < 0.005) {
+    // Random Quiz chance
+    if (currentDisplayScore > lastQuizScore.current + QUIZ_CHANCE_INTERVAL && Math.random() < 0.005) {
       lastQuizScore.current = currentDisplayScore;
       startQuiz();
       return; 
     }
 
+    // Spawn Obstacles
     if (obstacles.current.length === 0 || canvas.width - obstacles.current[obstacles.current.length - 1].x > OBSTACLE_MIN_GAP + Math.random() * 400) {
       const h = 30 + Math.random() * 35;
       const w = 35 + Math.random() * 35;
       obstacles.current.push({ id: Date.now() + Math.random(), x: canvas.width, width: w, height: h, type: 'cactus' });
     }
 
+    // Update & Collision
     const dinoRect = { x: 50 + 10, y: dinoY.current + 10, w: 50, h: DINO_HEIGHT - 20 };
     
-    let hasCollided = false;
     obstacles.current.forEach(obs => {
       obs.x -= gameSpeed.current;
-      if (!isInvincible && !hasCollided) {
+      
+      if (!isInvincible) {
         if ( dinoRect.x < obs.x + obs.width && dinoRect.x + dinoRect.w > obs.x && dinoRect.y < (GROUND_Y - obs.height) + obs.height && dinoRect.y + dinoRect.h > (GROUND_Y - obs.height) ) {
-          hasCollided = true;
+          if (canRevive.current) { 
+            canRevive.current = false; 
+            startQuiz(); 
+          }
+          else { 
+            setGameState('GAMEOVER'); 
+            if (currentDisplayScore > highScore) setHighScore(currentDisplayScore); 
+          }
         }
       }
     });
-
-    if (hasCollided) {
-      if (canRevive.current) { 
-        canRevive.current = false; 
-        startQuiz(); 
-        return; // PENTING: Menghentikan loop agar tidak flicker
-      } else { 
-        setGameState('GAMEOVER'); 
-        if (currentDisplayScore > highScore) setHighScore(currentDisplayScore);
-        return;
-      }
-    }
-
     obstacles.current = obstacles.current.filter(obs => obs.x + obs.width > -50);
 
+    // Particles (Dust trail)
     if (Math.random() > 0.85 && !isJumping.current) {
        particles.current.push({ id: Math.random(), x: 70, y: dinoY.current + DINO_HEIGHT - 10, vx: -gameSpeed.current * 0.4 - Math.random() * 2, vy: Math.random() * 2, life: 1.0 });
     }
     particles.current.forEach(p => { 
       p.x += p.vx; p.y += p.vy; p.life -= 0.03; 
-      ctx.globalAlpha = Math.max(0, p.life); 
+      ctx.globalAlpha = p.life; 
       ctx.fillStyle = theme.particle;
       ctx.fillRect(p.x, p.y, 4, 4); 
     });
     particles.current = particles.current.filter(p => p.life > 0);
     ctx.globalAlpha = 1.0;
 
+    // Draw Dino
     const dx = 50;
     const dy = dinoY.current;
     if (isInvincible) {
       const pulse = Math.sin(Date.now() / 150);
+      const blurSize = 25 + pulse * 10;
       ctx.save();
-      ctx.shadowBlur = 25 + pulse * 10;
+      ctx.shadowBlur = blurSize;
       ctx.shadowColor = `rgba(251, 191, 36, ${0.6 + pulse * 0.3})`;
+      ctx.strokeStyle = '#fbbf24'; 
+      ctx.lineWidth = 4; 
+      ctx.beginPath();
+      ctx.ellipse(dx + 35, dy - 20 + pulse * 5, 25, 6, 0, 0, Math.PI * 2); 
+      ctx.stroke();
       drawDinoBlocks(ctx, dx, dy, theme.dino, isJumping.current, scoreRef.current);
       ctx.restore();
     } else {
       drawDinoBlocks(ctx, dx, dy, theme.dino, isJumping.current, scoreRef.current);
     }
 
+    // Draw Cacti
     obstacles.current.forEach(obs => { drawCactus(ctx, obs.x, GROUND_Y - obs.height, obs.width, obs.height, theme.cactus); });
 
     frameId.current = requestAnimationFrame(gameLoop);
