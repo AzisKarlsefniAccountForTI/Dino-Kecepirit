@@ -281,42 +281,45 @@ const App: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: userText,
+        model: 'gemini-3-flash-preview',
+        contents: [{ parts: [{ text: userText }] }],
         config: {
-          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Expert. Use the updateEnvironment tool WHENEVER the user asks to change colors, weather, time of day (morning/night), or game atmosphere. Always respond in friendly Indonesian.",
+          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Specialist. Your primary goal is to help users change the game colors, weather, or atmosphere. If they ask for any visual change (like color, time of day, weather), ALWAYS trigger the 'updateEnvironment' tool. Always respond in friendly Indonesian after triggering the tool or if just chatting.",
           tools: [{ functionDeclarations: [updateEnvironmentTool] }]
         }
       });
 
       let aiText = response.text || "";
 
+      // Handle Tool Calls
       if (response.functionCalls && response.functionCalls.length > 0) {
-        const fc = response.functionCalls[0];
-        if (fc.name === 'updateEnvironment') {
-          const args = fc.args as any;
-          setTheme(prev => ({
-            ...prev,
-            sky: args.skyColor || prev.sky,
-            dino: args.dinoColor || prev.dino,
-            ground: args.groundColor || prev.ground,
-            themeName: args.themeName || prev.themeName,
-            cactus: args.cactusColor || prev.cactus
-          }));
-          if (!aiText) {
-            aiText = `ROAR! Selesai! Aku sudah ubah suasananya jadi "${args.themeName || 'Custom'}". Keren kan?`;
+        for (const fc of response.functionCalls) {
+          if (fc.name === 'updateEnvironment') {
+            const args = fc.args as any;
+            setTheme(prev => ({
+              ...prev,
+              sky: args.skyColor || prev.sky,
+              dino: args.dinoColor || prev.dino,
+              ground: args.groundColor || prev.ground,
+              themeName: args.themeName || prev.themeName,
+              cactus: args.cactusColor || prev.cactus
+            }));
+            
+            if (!aiText) {
+              aiText = `ROAR! Dino sudah sulap suasananya jadi "${args.themeName || 'Custom'}". Mantap kan?`;
+            }
           }
         }
       } 
       
       if (!aiText) {
-        aiText = "GRRR... Dino lagi bingung, coba ketik yang lain!";
+        aiText = "GRRR... Dino lagi gak konsen, coba ketik yang lain ya!";
       }
 
       setChatMessages(prev => [...prev, { role: 'ai', text: aiText }]);
     } catch (e) {
       console.error("AI Error:", e);
-      setChatMessages(prev => [...prev, { role: 'ai', text: "Aduh, Dino kebelet, gagal respon. Periksa koneksi atau API Key kamu ya!" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', text: "Waduh, koneksi Dino lagi putus nih. Coba lagi nanti ya!" }]);
     } finally {
       setIsChatLoading(false);
     }
