@@ -1,65 +1,71 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
 import { GameTheme } from "../types";
 
-async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
-  let lastError: any;
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (err: any) {
-      lastError = err;
-      const isQuotaError = err.message?.includes('429') || err.status === 429 || err.message?.includes('RESOURCE_EXHAUSTED');
-      if (isQuotaError && i < maxRetries - 1) {
-        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-      throw err;
-    }
+export const PRESET_THEMES: GameTheme[] = [
+  {
+    sky: "#f8fafc",
+    ground: "#475569",
+    dino: "#166534",
+    cactus: "#064e3b",
+    particle: "#b45309",
+    themeName: "Pagi Kampus",
+    icon: "☀️",
+    gradient: "linear-gradient(to bottom, #bae6fd 0%, #f8fafc 100%)"
+  },
+  {
+    sky: "#0f172a",
+    ground: "#94a3b8",
+    dino: "#4ade80",
+    cactus: "#10b981",
+    particle: "#334155",
+    themeName: "Malam Lembur",
+    icon: "🌙",
+    gradient: "linear-gradient(to bottom, #020617 0%, #0f172a 100%)"
+  },
+  {
+    sky: "#2e1065",
+    ground: "#d946ef",
+    dino: "#06b6d4",
+    cactus: "#f43f5e",
+    particle: "#fbbf24",
+    themeName: "Cyberpunk IT",
+    icon: "💻",
+    gradient: "linear-gradient(to bottom, #2e1065 0%, #701a75 100%)"
+  },
+  {
+    sky: "#fffbeb",
+    ground: "#92400e",
+    dino: "#b45309",
+    cactus: "#166534",
+    particle: "#d97706",
+    themeName: "Gurun Pasir",
+    icon: "🏜️",
+    gradient: "linear-gradient(to bottom, #fbbf24 0%, #fffbeb 100%)"
+  },
+  {
+    sky: "#f1f5f9",
+    ground: "#1e293b",
+    dino: "#2563eb",
+    cactus: "#475569",
+    particle: "#ffffff",
+    themeName: "Musim Salju",
+    icon: "❄️",
+    gradient: "linear-gradient(to bottom, #e2e8f0 0%, #ffffff 100%)"
+  },
+  {
+    sky: "#7c2d12",
+    ground: "#451a03",
+    dino: "#ea580c",
+    cactus: "#1c1917",
+    particle: "#f97316",
+    themeName: "Senja IT",
+    icon: "🌆",
+    gradient: "linear-gradient(to bottom, #7c2d12 0%, #ea580c 60%, #fdba74 100%)"
   }
-  throw lastError;
-}
+];
 
-export async function generateNewTheme(score: number): Promise<GameTheme> {
-  try {
-    return await withRetry(async () => {
-      // Create a new instance right before the call to ensure the latest API key is used
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [{ parts: [{ text: `Generate a prehistoric environmental theme for a game called 'T Rex Kecepirit' with current score ${score}. Create a unique and funny atmosphere based on IT or prehistoric seasons. Return JSON only.` }] }],
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              sky: { type: Type.STRING, description: "Hex color for the sky/background" },
-              ground: { type: Type.STRING, description: "Hex color for the ground" },
-              dino: { type: Type.STRING, description: "Hex color for the T-Rex body" },
-              cactus: { type: Type.STRING, description: "Hex color for the obstacles/cacti" },
-              particle: { type: Type.STRING, description: "Hex color for the dust trail" },
-              themeName: { type: Type.STRING, description: "A short creative theme name" }
-            },
-            required: ["sky", "ground", "dino", "cactus", "particle", "themeName"],
-          },
-        },
-      });
-
-      if (response && response.text) {
-        return JSON.parse(response.text.trim());
-      }
-      throw new Error("Empty AI response");
-    });
-  } catch (error) {
-    console.error("Theme AI Error:", error);
-    return {
-      sky: "#f8fafc",
-      ground: "#475569",
-      dino: "#166534",
-      cactus: "#064e3b",
-      particle: "#b45309",
-      themeName: "Jurassic Default"
-    };
-  }
+export function getNextTheme(currentThemeName: string): GameTheme {
+  const currentIndex = PRESET_THEMES.findIndex(t => t.themeName === currentThemeName);
+  const nextIndex = (currentIndex + 1) % PRESET_THEMES.length;
+  return PRESET_THEMES[nextIndex];
 }

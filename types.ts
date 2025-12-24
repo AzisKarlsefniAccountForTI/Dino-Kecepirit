@@ -6,6 +6,8 @@ export interface GameTheme {
   cactus: string;
   particle: string;
   themeName: string;
+  icon: string;
+  gradient: string;
 }
 
 export interface Obstacle {
@@ -13,7 +15,8 @@ export interface Obstacle {
   x: number;
   width: number;
   height: number;
-  type: 'cactus';
+  type: 'cactus' | 'pterodactyl';
+  yOffset?: number; // Used for pterodactyl flight height
 }
 
 export interface Particle {
