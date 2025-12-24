@@ -250,7 +250,7 @@ const App: React.FC = () => {
     } catch (e: any) {
       console.error("AI Error:", e);
       if (e.message?.includes('429')) {
-        setQuizExplanation("Quota Dino habis! Gunakan API Key pribadimu untuk lanjut.");
+        setQuizExplanation("Quota Dino habis! Gunakan API Key pribadimu dengan klik tombol 'Ganti Kunci API' agar bisa melanjutkan.");
       } else {
         setQuizExplanation("Periksa koneksi atau API Key kamu ya! Dino gak denger.");
       }
@@ -358,7 +358,7 @@ const App: React.FC = () => {
       console.error("AI Error:", e);
       let errorMsg = "Periksa koneksi atau API Key kamu ya! Dino gak denger.";
       if (e.message?.includes('429')) {
-        errorMsg = "Waduh, quota barengan Dino sudah habis. Klik tombol 'Ganti Kunci API' di bawah untuk pakai API Key pribadimu!";
+        errorMsg = "Waduh, quota barengan Dino sudah habis. Klik tombol 'Ganti Kunci API' agar kamu bisa lanjut main pakai API Key pribadimu!";
       }
       setChatMessages(prev => [...prev, { role: 'ai', text: errorMsg }]);
     } finally {
@@ -743,14 +743,20 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <footer className="mb-10 md:mb-20 text-slate-400 text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.5em] flex items-center gap-6 md:gap-12 w-full max-w-5xl px-8 text-center flex-col md:flex-row">
-        <div className="hidden md:block h-px flex-1 bg-slate-200/60" />
-        <div className="flex flex-col gap-1 md:gap-2">
-          <span className="text-slate-500">Bahasa Inggris &bull; DOSEN: Marisa Fran Lina M.Pd</span>
-          <span className="text-emerald-500/60">Created by Azis, Arkan & Oryza</span>
+      <footer className="mb-10 md:mb-20 w-full max-w-5xl px-8 flex flex-col items-center gap-6">
+        <div className="w-full h-px bg-slate-200/50" />
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 text-slate-400 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] italic">
+          <div className="flex items-center gap-3">
+            <span className="text-emerald-600">Created by:</span>
+            <span className="text-slate-600">Azis • Arkan • Oryza</span>
+          </div>
+          <div className="hidden md:block w-1 h-1 bg-slate-300 rounded-full" />
+          <div className="flex items-center gap-3">
+            <span className="text-slate-500">UAS Bahasa Inggris</span>
+            <span className="text-slate-300 opacity-60">|</span>
+            <span className="text-slate-500">Dosen: Marisa Fran Lina M.Pd</span>
+          </div>
         </div>
-        <div className="hidden md:block h-px flex-1 bg-slate-200/60" />
-        <p>&copy; 2025 T-Rex Kecepirit Project</p>
       </footer>
     </div>
   );
