@@ -208,7 +208,10 @@ const App: React.FC = () => {
     setIsExplaining(true);
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const key = process.env.API_KEY || "";
+      if (!key) throw new Error("API Key Missing");
+
+      const ai = new GoogleGenAI({ apiKey: key });
       const prompt = `Explain why the answer "${currentQuiz.options[index]}" is ${isCorrect ? 'CORRECT' : 'WRONG'} for the question: "${currentQuiz.question}". Respond as Dino Kecepirit (funny T-Rex) in Indonesian. Max 2 sentences.`;
       const response = await ai.models.generateContent({ 
         model: 'gemini-3-flash-preview', 
@@ -217,7 +220,7 @@ const App: React.FC = () => {
       setQuizExplanation(response.text || "Dino capek jelasin.");
     } catch (e) {
       console.error("AI Error:", e);
-      setQuizExplanation("Gagal koneksi ke otak purba.");
+      setQuizExplanation("Periksa koneksi atau API Key kamu ya! Dino lagi pusing.");
     } finally {
       setIsExplaining(false);
     }
@@ -279,24 +282,21 @@ const App: React.FC = () => {
     setIsChatLoading(true);
 
     try {
-      // Pastikan API Key ada
-      if (!process.env.API_KEY) {
-        throw new Error("API_KEY is not defined");
-      }
+      const key = process.env.API_KEY || "";
+      if (!key) throw new Error("API Key Missing");
 
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: key });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: userText, // Gunakan string langsung, bukan array of parts yang salah format
+        model: 'gemini-3-pro-preview', // Menggunakan Pro untuk tool calling yang lebih akurat
+        contents: userText, // Mengirim teks langsung sebagai string
         config: {
-          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Specialist. Your primary goal is to help users change the game colors, weather, or atmosphere. If they ask for any visual change (seperti warna kaktus, warna dino, cuaca, waktu siang/malam), ALWAYS trigger the 'updateEnvironment' tool. Always respond in friendly Indonesian after triggering the tool or if just chatting.",
+          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Specialist. Your primary goal is to help users change the game colors, weather, or atmosphere. If they ask for any visual change (seperti warna kaktus, warna dino, cuaca, waktu siang/malam), ALWAYS trigger the 'updateEnvironment' tool. Always respond in friendly Indonesian.",
           tools: [{ functionDeclarations: [updateEnvironmentTool] }]
         }
       });
 
       let aiText = response.text || "";
 
-      // Handle Tool Calls
       if (response.functionCalls && response.functionCalls.length > 0) {
         for (const fc of response.functionCalls) {
           if (fc.name === 'updateEnvironment') {
@@ -324,7 +324,7 @@ const App: React.FC = () => {
       setChatMessages(prev => [...prev, { role: 'ai', text: aiText }]);
     } catch (e) {
       console.error("AI Error:", e);
-      setChatMessages(prev => [...prev, { role: 'ai', text: "Waduh, koneksi Dino lagi putus atau kunci pintu (API_KEY) belum dipasang di Vercel. Coba cek lagi ya!" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', text: "Periksa koneksi atau API Key kamu ya! Dino gak denger." }]);
     } finally {
       setIsChatLoading(false);
     }
@@ -338,30 +338,24 @@ const App: React.FC = () => {
 
     const legAnim = !isJumping && Math.floor(score / 5) % 2 === 0;
 
-    // --- FAR LEG (BACK LEG) ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 20, y + 70, 12, legAnim ? 15 : 10);
     ctx.fillRect(x + 23, y + (legAnim ? 80 : 75), 10, 5);
     ctx.fillStyle = shadowColor;
     ctx.fillRect(x + 20, y + 70, 12, legAnim ? 15 : 10);
 
-    // --- MAIN BODY ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 10, y + 35, 35, 35); 
-    
     ctx.fillStyle = shadowColor;
     ctx.fillRect(x + 10, y + 62, 35, 8);
     ctx.fillRect(x + 40, y + 35, 5, 35);
-
     ctx.fillStyle = bellyColor;
     ctx.fillRect(x + 20, y + 45, 12, 18);
-
     ctx.fillStyle = patternsColor;
     ctx.fillRect(x + 15, y + 38, 4, 4);
     ctx.fillRect(x + 30, y + 50, 4, 4);
     ctx.fillRect(x + 12, y + 55, 4, 4);
 
-    // --- TAIL ---
     ctx.fillStyle = color;
     ctx.fillRect(x - 5, y + 45, 15, 15);
     ctx.fillRect(x - 12, y + 50, 8, 8);
@@ -369,34 +363,26 @@ const App: React.FC = () => {
     ctx.fillRect(x - 5, y + 55, 15, 5);
     ctx.fillRect(x - 12, y + 54, 8, 4);
 
-    // --- NECK ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 35, y + 35, 12, 15);
     ctx.fillStyle = shadowColor;
     ctx.fillRect(x + 44, y + 35, 3, 15);
 
-    // --- HEAD ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 15, y + 5, 54, 35); 
-    
     ctx.fillStyle = highlightColor;
     ctx.fillRect(x + 15, y + 5, 54, 6);
-    
     ctx.fillStyle = shadowColor;
     ctx.fillRect(x + 15, y + 30, 54, 5);
     ctx.fillRect(x + 64, y + 5, 5, 35);
-
     ctx.fillStyle = "rgba(0,0,0,0.4)";
     ctx.fillRect(x + 45, y + 24, 24, 2);
-
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(x + 48, y + 26, 4, 5);
     ctx.fillRect(x + 56, y + 26, 4, 5);
     ctx.fillRect(x + 64, y + 26, 4, 5);
-
     ctx.fillStyle = "rgba(0,0,0,0.3)";
     ctx.fillRect(x + 62, y + 10, 3, 3);
-
     ctx.fillStyle = "#fbbf24";
     ctx.fillRect(x + 45, y + 8, 10, 10);
     ctx.fillStyle = "#000000";
@@ -404,14 +390,12 @@ const App: React.FC = () => {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(x + 50, y + 11, 1, 1);
 
-    // --- ARMS ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 42, y + 45, 14, 7);
     ctx.fillRect(x + 54, y + 49, 4, 4);
     ctx.fillStyle = shadowColor;
     ctx.fillRect(x + 42, y + 50, 14, 2);
 
-    // --- NEAR LEG (FRONT LEG) ---
     ctx.fillStyle = color;
     ctx.fillRect(x + 35, y + 70, 12, legAnim ? 10 : 15);
     ctx.fillRect(x + 38, y + (legAnim ? 75 : 80), 10, 5);
@@ -445,7 +429,6 @@ const App: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Background & Ground line
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = theme.sky;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -453,7 +436,6 @@ const App: React.FC = () => {
     ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(canvas.width, GROUND_Y); ctx.stroke();
 
-    // Physics
     dinoVy.current += GRAVITY;
     dinoY.current += dinoVy.current;
     if (dinoY.current > GROUND_Y - DINO_HEIGHT) {
@@ -462,32 +444,27 @@ const App: React.FC = () => {
       isJumping.current = false;
     }
 
-    // Score & Speed
     scoreRef.current += 1;
     const currentDisplayScore = Math.floor(scoreRef.current / 10);
     setScore(currentDisplayScore);
     gameSpeed.current += SPEED_INCREMENT;
 
-    // AI Theme Change
     if (currentDisplayScore >= nextThemeScore.current && !isLoadingTheme) {
       updateTheme(currentDisplayScore);
     }
 
-    // Random Quiz chance
     if (currentDisplayScore > lastQuizScore.current + QUIZ_CHANCE_INTERVAL && Math.random() < 0.005) {
       lastQuizScore.current = currentDisplayScore;
       startQuiz();
       return; 
     }
 
-    // Spawn Obstacles
     if (obstacles.current.length === 0 || canvas.width - obstacles.current[obstacles.current.length - 1].x > OBSTACLE_MIN_GAP + Math.random() * 400) {
       const h = 30 + Math.random() * 35;
       const w = 35 + Math.random() * 35;
       obstacles.current.push({ id: Date.now() + Math.random(), x: canvas.width, width: w, height: h, type: 'cactus' });
     }
 
-    // Update & Collision
     const dinoRect = { x: 50 + 10, y: dinoY.current + 10, w: 50, h: DINO_HEIGHT - 20 };
     
     obstacles.current.forEach(obs => {
@@ -508,7 +485,6 @@ const App: React.FC = () => {
     });
     obstacles.current = obstacles.current.filter(obs => obs.x + obs.width > -50);
 
-    // Particles (Dust trail)
     if (Math.random() > 0.85 && !isJumping.current) {
        particles.current.push({ id: Math.random(), x: 70, y: dinoY.current + DINO_HEIGHT - 10, vx: -gameSpeed.current * 0.4 - Math.random() * 2, vy: Math.random() * 2, life: 1.0 });
     }
@@ -521,7 +497,6 @@ const App: React.FC = () => {
     particles.current = particles.current.filter(p => p.life > 0);
     ctx.globalAlpha = 1.0;
 
-    // Draw Dino
     const dx = 50;
     const dy = dinoY.current;
     if (isInvincible) {
@@ -541,7 +516,6 @@ const App: React.FC = () => {
       drawDinoBlocks(ctx, dx, dy, theme.dino, isJumping.current, scoreRef.current);
     }
 
-    // Draw Cacti
     obstacles.current.forEach(obs => { drawCactus(ctx, obs.x, GROUND_Y - obs.height, obs.width, obs.height, theme.cactus); });
 
     frameId.current = requestAnimationFrame(gameLoop);
@@ -568,7 +542,7 @@ const App: React.FC = () => {
         </div>
         <div className="glass px-6 md:px-10 py-3 md:py-4 rounded-full shadow-2xl border border-white/80 animate-in fade-in duration-1000 delay-300">
            <p className="text-emerald-700 font-black tracking-[0.2em] md:tracking-[0.4em] text-[8px] md:text-xs uppercase italic text-center">
-             UAS Bahasa Inggris &bull; IT Specialist Edition
+             UAS Bahasa Inggris &bull; IT Specialist Edition &bull; 2025
            </p>
         </div>
       </div>
@@ -677,24 +651,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-10 md:mb-16 px-4">
-        <div className="glass p-8 md:p-10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-xl border border-white/50 text-center flex flex-col items-center hover:translate-y-[-5px] transition-transform">
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-emerald-50 text-emerald-700 rounded-[1.2rem] flex items-center justify-center mb-4 md:mb-6 font-black shadow-inner border border-emerald-100 text-[10px] md:text-base">SPACE</div>
-          <h3 className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 font-pixel">Lompat</h3>
-          <p className="text-[10px] md:text-xs font-bold text-slate-600 leading-relaxed italic">Gunakan Spasi atau Panah Atas untuk melompati kaktus.</p>
-        </div>
-        <div className="glass p-8 md:p-10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-xl border border-white/50 text-center flex flex-col items-center hover:translate-y-[-5px] transition-transform">
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-amber-50 text-amber-600 rounded-[1.2rem] flex items-center justify-center mb-4 md:mb-6 text-2xl md:text-3xl shadow-inner border border-amber-100">👼</div>
-          <h3 className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 font-pixel">Kebal</h3>
-          <p className="text-[10px] md:text-xs font-bold text-slate-600 leading-relaxed italic">Dapatkan perlindungan 'Angel Mode' dengan menjawab kuis secara benar.</p>
-        </div>
-        <div className="glass p-8 md:p-10 rounded-[2.5rem] md:rounded-[3.5rem] shadow-xl border border-white/50 text-center flex flex-col items-center hover:translate-y-[-5px] transition-transform">
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-50 text-blue-700 rounded-[1.2rem] flex items-center justify-center mb-4 md:mb-6 text-2xl md:text-3xl shadow-inner border border-blue-100">🎨</div>
-          <h3 className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 font-pixel">AI Theme</h3>
-          <p className="text-[10px] md:text-xs font-bold text-slate-600 leading-relaxed italic">Ketik perintah di chat untuk mengganti <b>suasana</b> secara instan.</p>
-        </div>
-      </div>
-
       <div className="w-full max-w-5xl glass rounded-[3rem] md:rounded-[5rem] shadow-[0_80px_150px_-50px_rgba(0,0,0,0.2)] border-[10px] md:border-[14px] border-white overflow-hidden flex flex-col md:flex-row min-h-[500px] md:h-[600px] mb-16 md:mb-20 relative">
         <div className="md:w-1/3 bg-slate-900 p-8 md:p-14 text-white flex flex-col justify-between relative overflow-hidden">
           <div className="absolute -top-10 -right-10 w-48 md:w-72 h-48 md:h-72 bg-emerald-500/20 rounded-full blur-[80px] md:blur-[110px]"></div>
@@ -752,6 +708,7 @@ const App: React.FC = () => {
           <span className="text-emerald-500/60">Created by Azis, Arkan & Oryza</span>
         </div>
         <div className="hidden md:block h-px flex-1 bg-slate-200/60" />
+        <p>&copy; 2025 T-Rex Kecepirit Project</p>
       </footer>
     </div>
   );

@@ -1,12 +1,27 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { GameTheme } from "../types";
 
 export async function generateNewTheme(score: number): Promise<GameTheme> {
+  const apiKey = process.env.API_KEY || "";
+  
+  if (!apiKey) {
+    console.warn("API_KEY tidak ditemukan, menggunakan tema default.");
+    return {
+      sky: "#f8fafc",
+      ground: "#475569",
+      dino: "#166534",
+      cactus: "#064e3b",
+      particle: "#b45309",
+      themeName: "Jurassic Default (No API)"
+    };
+  }
+
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Generate a prehistoric environmental theme for a game called 'T Rex Kecepirit' with current score ${score}. Create a unique and funny atmosphere based on IT or prehistoric seasons.`,
+      contents: `Generate a prehistoric environmental theme for a game called 'T Rex Kecepirit' with current score ${score}. Create a unique and funny atmosphere based on IT or prehistoric seasons. Return JSON only.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -25,8 +40,7 @@ export async function generateNewTheme(score: number): Promise<GameTheme> {
     });
 
     if (response && response.text) {
-      const cleanedText = response.text.replace(/```json/g, "").replace(/```/g, "").trim();
-      return JSON.parse(cleanedText);
+      return JSON.parse(response.text.trim());
     }
     throw new Error("Empty AI response");
   } catch (error) {
@@ -41,4 +55,3 @@ export async function generateNewTheme(score: number): Promise<GameTheme> {
     };
   }
 }
-
