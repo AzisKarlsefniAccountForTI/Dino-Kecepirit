@@ -1,10 +1,9 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { GameTheme } from "../types";
 
 export async function generateNewTheme(score: number): Promise<GameTheme> {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || 'FAKE_API_KEY_FOR_DEVELOPMENT' });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Generate a prehistoric environmental theme for a game called 'T Rex Kecepirit' with current score ${score}. Create a unique and funny atmosphere based on IT or prehistoric seasons.`,
@@ -42,3 +41,4 @@ export async function generateNewTheme(score: number): Promise<GameTheme> {
     };
   }
 }
+
