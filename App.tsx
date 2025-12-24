@@ -249,16 +249,22 @@ const App: React.FC = () => {
     nextThemeScore.current += THEME_CHANGE_INTERVAL;
   };
 
-  const drawCactus = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string, withSnow: boolean) => {
+  const drawCactus = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string, themeName: string) => {
     ctx.fillStyle = color;
     ctx.fillRect(x + w * 0.3, y, w * 0.4, h);
     ctx.fillRect(x + w * 0.1, y + h * 0.4, w * 0.2, h * 0.15);
     ctx.fillRect(x + w * 0.1, y + h * 0.2, w * 0.1, h * 0.2);
     ctx.fillRect(x + w * 0.7, y + h * 0.3, w * 0.2, h * 0.15);
     ctx.fillRect(x + w * 0.8, y + h * 0.1, w * 0.1, h * 0.2);
-    if (withSnow) {
+    if (themeName === "Musim Salju") {
       ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
       ctx.fillRect(x + w * 0.3, y - 2, w * 0.4, 4);
+    }
+    if (themeName === "Musim Semi") {
+      ctx.fillStyle = "#f472b6"; // pink flower
+      ctx.beginPath();
+      ctx.arc(x + w * 0.5, y - 3, 4, 0, Math.PI * 2);
+      ctx.fill();
     }
   };
 
@@ -268,7 +274,6 @@ const App: React.FC = () => {
     const bellyColor = "rgba(255,255,255,0.25)";
     const scaleColor = "rgba(0,0,0,0.2)";
     
-    // Smooth Animation Logic - Reduced vibration with slower walkPhase
     const walkPhase = score / 8.0; 
     
     const leg1Y = isJumping ? (vy < 0 ? -10 : 6) : Math.sin(walkPhase) * 10;
@@ -284,7 +289,6 @@ const App: React.FC = () => {
     bodyGrad.addColorStop(0.7, color);
     bodyGrad.addColorStop(1, "rgba(0,0,0,0.25)");
 
-    // Legs
     ctx.fillStyle = color;
     ctx.fillRect(x + 16 + leg1X, bodyY + 68, 14, 14 + (leg1Y > 0 ? leg1Y : 0));
     ctx.fillStyle = shadowColor;
@@ -292,29 +296,24 @@ const App: React.FC = () => {
     ctx.fillStyle = color;
     ctx.fillRect(x + 18 + leg1X, bodyY + 78 + (leg1Y > 0 ? leg1Y : 0), 12, 6); 
 
-    // Torso
     ctx.fillStyle = bodyGrad;
     ctx.fillRect(x + 8, bodyY + 30, 44, 44); 
     ctx.fillStyle = bellyColor;
     ctx.fillRect(x + 16, bodyY + 44, 14, 24);
 
-    // Scales
     ctx.fillStyle = scaleColor;
     [[12, 35], [25, 45], [38, 32], [10, 55]].forEach(([sx, sy]) => ctx.fillRect(x + sx, bodyY + sy, 4, 4));
 
-    // Tail
     const tailSway = isJumping ? 0 : Math.sin(walkPhase - 0.5) * 2;
     ctx.fillStyle = color;
     ctx.fillRect(x - 14, bodyY + 40 + tailSway, 24, 24);
     ctx.fillRect(x - 28, bodyY + 48 + tailSway * 1.5, 16, 14);
 
-    // Arms
     const armWiggle = isJumping ? vy * 0.4 : Math.cos(walkPhase) * 4;
     ctx.fillStyle = color;
     ctx.fillRect(x + 42, bodyY + 36 + armWiggle, 18, 8); 
     ctx.fillRect(x + 54, bodyY + 36 + armWiggle, 8, 18); 
 
-    // Head
     const headBob = isJumping ? 0 : Math.abs(Math.sin(walkPhase * 2.0 + 0.3)) * 1.2;
     const headY = bodyY - 4 + headBob;
     ctx.fillStyle = color;
@@ -324,7 +323,6 @@ const App: React.FC = () => {
     ctx.fillStyle = "rgba(0,0,0,0.65)";
     ctx.fillRect(x + 45, headY + 24, 35, 3);
 
-    // Teeth
     ctx.fillStyle = "#ffffff";
     for(let i=0; i<4; i++) {
         const tx = x + 48 + (i * 8);
@@ -335,13 +333,11 @@ const App: React.FC = () => {
         ctx.fill();
     }
     
-    // Eye
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(x + 40, headY + 6, 16, 16);
     ctx.fillStyle = "#000000";
     ctx.fillRect(x + 47, headY + 9, 7, 7);
 
-    // Front Leg
     ctx.fillStyle = color;
     ctx.fillRect(x + 32 + leg2X, bodyY + 68, 16, 16 + (leg2Y > 0 ? leg2Y : 0));
     ctx.fillStyle = highlightColor;
@@ -365,7 +361,7 @@ const App: React.FC = () => {
       ctx.fillStyle = "#0f172a";
       ctx.beginPath(); ctx.arc(710, 55, 25, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#ffffff";
-      for (let i = 0; i < 12; i++) { // Reduced star count
+      for (let i = 0; i < 12; i++) {
         const sx = (i * 157.5) % canvasWidth;
         const sy = (i * 97) % 150;
         const opacity = Math.abs(Math.sin(time * 0.5 + i)) * 0.6;
@@ -376,7 +372,7 @@ const App: React.FC = () => {
     } else if (themeName === "Cyberpunk IT") {
       ctx.strokeStyle = "rgba(217, 70, 239, 0.15)";
       ctx.lineWidth = 1;
-      for (let i = 0; i < 3; i++) { // Fewer lines
+      for (let i = 0; i < 3; i++) {
         const ly = 60 + i * 60;
         ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(canvasWidth, ly); ctx.stroke();
       }
@@ -398,7 +394,7 @@ const App: React.FC = () => {
          ctx.beginPath(); ctx.moveTo(wx, 200); ctx.bezierCurveTo(wx + 20, 180, wx - 20, 160, wx, 140); ctx.stroke();
       }
     } else if (themeName === "Musim Salju") {
-      if (weatherParticles.current.length < 35) { // Reduced snow count
+      if (weatherParticles.current.length < 35) {
         weatherParticles.current.push({
           x: Math.random() * canvasWidth,
           y: -10,
@@ -413,15 +409,24 @@ const App: React.FC = () => {
         if (p.y > 400) p.y = -10;
         ctx.fillRect(p.x, p.y, p.size, p.size);
       });
-    } else if (themeName === "Senja IT") {
-      const sunGrad = ctx.createRadialGradient(400, 280, 0, 400, 280, 120);
-      sunGrad.addColorStop(0, "rgba(253, 186, 116, 0.6)");
-      sunGrad.addColorStop(1, "rgba(124, 45, 18, 0)");
-      ctx.fillStyle = sunGrad;
-      ctx.beginPath(); ctx.arc(400, 280, 120, 0, Math.PI, true); ctx.fill();
-      ctx.fillStyle = "rgba(234, 88, 12, 0.3)";
-      const sCloudX = (time * 12) % (canvasWidth + 300) - 150;
-      ctx.fillRect(sCloudX, 110, 80, 12); ctx.fillRect(sCloudX + 450, 160, 100, 10);
+    } else if (themeName === "Musim Semi") {
+      ctx.fillStyle = "rgba(253, 224, 71, 0.6)";
+      ctx.beginPath(); ctx.arc(100, 100, 50, 0, Math.PI * 2); ctx.fill();
+      if (weatherParticles.current.length < 15) {
+        weatherParticles.current.push({
+            x: Math.random() * canvasWidth,
+            y: -10,
+            speed: 0.8 + Math.random(),
+            size: 4 + Math.random() * 2
+        });
+      }
+      ctx.fillStyle = "#f9a8d4";
+      weatherParticles.current.forEach(p => {
+          p.y += p.speed;
+          p.x += Math.sin(p.y / 20) * 0.5;
+          if (p.y > 400) p.y = -10;
+          ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
     }
   };
 
@@ -498,7 +503,6 @@ const App: React.FC = () => {
     });
     obstacles.current = obstacles.current.filter(obs => obs.x + obs.width > -50);
 
-    // Reduced dust particles to prevent lag
     if (Math.random() > 0.95 && !isJumping.current) {
        particles.current.push({ id: Math.random(), x: 70, y: dinoY.current + DINO_HEIGHT - 10, vx: -gameSpeed.current * 0.3, vy: Math.random() * 1.5, life: 1.0 });
     }
@@ -526,7 +530,7 @@ const App: React.FC = () => {
 
     obstacles.current.forEach(obs => { 
       if (obs.type === 'cactus') {
-        drawCactus(ctx, obs.x, GROUND_Y - obs.height, obs.width, obs.height, theme.cactus, theme.themeName === "Musim Salju"); 
+        drawCactus(ctx, obs.x, GROUND_Y - obs.height, obs.width, obs.height, theme.cactus, theme.themeName); 
       } else {
         const flapPhase = scoreRef.current / 10;
         const wingY = Math.sin(flapPhase) * 12;
@@ -581,6 +585,18 @@ const App: React.FC = () => {
           }}
         >
           <canvas ref={canvasRef} width={800} height={400} className="w-full h-full cursor-pointer block touch-none" onClick={handleJump} />
+          
+          {isInvincible && (
+            <div className="absolute top-6 left-6 z-10 animate-in slide-in-from-left duration-500">
+              <span className="text-[7px] font-black text-amber-600 uppercase tracking-widest drop-shadow-sm ml-1">MODE KEBAL</span>
+              <div className="w-40 md:w-56 h-3 bg-slate-900/40 rounded-full border border-white/30 overflow-hidden shadow-inner">
+                <div 
+                  className="h-full bg-gradient-to-r from-yellow-300 via-amber-400 to-amber-500 transition-all duration-100 ease-linear"
+                  style={{ width: `${(invincibilityTimeLeft / INVINCIBILITY_DURATION) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {gameState === 'PLAYING' && (
             <div className="absolute top-6 md:top-8 right-6 md:right-8 flex flex-col md:flex-row gap-2 md:gap-4 pointer-events-none z-[60] animate-in fade-in duration-500">
@@ -645,7 +661,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* COMPACT CONTROL PANEL */}
       <div className="w-full max-w-5xl glass rounded-[1.5rem] md:rounded-[2.5rem] shadow-xl border-[4px] md:border-[8px] border-white overflow-hidden flex flex-col md:flex-row min-h-[160px] mb-8">
         <div className="md:w-[22%] bg-slate-900 p-6 text-white flex flex-col justify-center relative overflow-hidden">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-[50px]"></div>

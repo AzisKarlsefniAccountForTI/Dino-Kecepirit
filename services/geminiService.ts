@@ -53,14 +53,14 @@ export const PRESET_THEMES: GameTheme[] = [
     gradient: "linear-gradient(to bottom, #e2e8f0 0%, #ffffff 100%)"
   },
   {
-    sky: "#7c2d12",
-    ground: "#451a03",
-    dino: "#ea580c",
-    cactus: "#1c1917",
-    particle: "#f97316",
-    themeName: "Senja IT",
-    icon: "🌆",
-    gradient: "linear-gradient(to bottom, #7c2d12 0%, #ea580c 60%, #fdba74 100%)"
+    sky: "#a7f3d0",
+    ground: "#16a34a",
+    dino: "#ec4899",
+    cactus: "#059669",
+    particle: "#fde047",
+    themeName: "Musim Semi",
+    icon: "🌸",
+    gradient: "linear-gradient(to bottom, #a7f3d0 0%, #f0fdf4 100%)"
   }
 ];
 
