@@ -279,12 +279,17 @@ const App: React.FC = () => {
     setIsChatLoading(true);
 
     try {
+      // Pastikan API Key ada
+      if (!process.env.API_KEY) {
+        throw new Error("API_KEY is not defined");
+      }
+
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: [{ parts: [{ text: userText }] }],
+        model: 'gemini-3-pro-preview',
+        contents: userText, // Gunakan string langsung, bukan array of parts yang salah format
         config: {
-          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Specialist. Your primary goal is to help users change the game colors, weather, or atmosphere. If they ask for any visual change (like color, time of day, weather), ALWAYS trigger the 'updateEnvironment' tool. Always respond in friendly Indonesian after triggering the tool or if just chatting.",
+          systemInstruction: "You are 'Dino Kecepirit', a funny T-Rex TI Specialist. Your primary goal is to help users change the game colors, weather, or atmosphere. If they ask for any visual change (seperti warna kaktus, warna dino, cuaca, waktu siang/malam), ALWAYS trigger the 'updateEnvironment' tool. Always respond in friendly Indonesian after triggering the tool or if just chatting.",
           tools: [{ functionDeclarations: [updateEnvironmentTool] }]
         }
       });
@@ -306,7 +311,7 @@ const App: React.FC = () => {
             }));
             
             if (!aiText) {
-              aiText = `ROAR! Dino sudah sulap suasananya jadi "${args.themeName || 'Custom'}". Mantap kan?`;
+              aiText = `ROAR! Selesai! Aku sudah ubah suasananya jadi "${args.themeName || 'Custom'}". Keren kan?`;
             }
           }
         }
@@ -319,7 +324,7 @@ const App: React.FC = () => {
       setChatMessages(prev => [...prev, { role: 'ai', text: aiText }]);
     } catch (e) {
       console.error("AI Error:", e);
-      setChatMessages(prev => [...prev, { role: 'ai', text: "Waduh, koneksi Dino lagi putus nih. Coba lagi nanti ya!" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', text: "Waduh, koneksi Dino lagi putus atau kunci pintu (API_KEY) belum dipasang di Vercel. Coba cek lagi ya!" }]);
     } finally {
       setIsChatLoading(false);
     }
